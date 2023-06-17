@@ -63,4 +63,10 @@ func init() {
 	if err != nil {
 		log.Fatalf("failed to mark username flag as required: %s\n", err.Error())
 	}
+
+	loginCmd.Flags().StringP("password", "p", "", "Пароль пользователя")
+	err = loginCmd.MarkFlagRequired("password")
+	if err != nil {
+		log.Fatalf("failed to mark password flag as required: %s\n", err.Error())
+	}
 }
