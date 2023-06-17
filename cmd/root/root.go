@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/olezhek28/chat-client/internal/app"
+	"github.com/olezhek28/chat-client/internal/model"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +20,7 @@ var loginCmd = &cobra.Command{
 	Short: "Авторизует на сервере",
 	Run: func(cmd *cobra.Command, args []string) {
 		ctx := cmd.Context()
-		
+
 		username, err := cmd.Flags().GetString("username")
 		if err != nil {
 			log.Fatalf("failed to get username: %s\n", err.Error())
@@ -32,7 +34,10 @@ var loginCmd = &cobra.Command{
 		serviceProvider := app.NewServiceProvider()
 		handlerService := serviceProvider.GetHandlerService(ctx)
 
-		err = handlerService.Login(ctx, username, password)
+		err = handlerService.Login(ctx, &model.AuthInfo{
+			Username: username,
+			Password: password,
+		})
 		if err != nil {
 			log.Fatalf("failed to login: %s\n", err.Error())
 		}

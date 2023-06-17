@@ -5,7 +5,12 @@ import (
 	"log"
 	"time"
 
+	"github.com/olezhek28/chat-client/internal/client/grpc/auth"
+	chatServer "github.com/olezhek28/chat-client/internal/client/grpc/chat_server"
+	"github.com/olezhek28/chat-client/internal/client/redis"
 	"github.com/olezhek28/chat-client/internal/closer"
+	"github.com/olezhek28/chat-client/internal/handler"
+	"github.com/olezhek28/chat-client/internal/interceptor"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -16,7 +21,7 @@ type ServiceProvider struct {
 	chatServerClient chatServer.Client
 	redisClient      redis.Client
 
-	handlerService *handler.Service
+	handlerService *handler.Handler
 }
 
 func NewServiceProvider() *ServiceProvider {
@@ -40,7 +45,7 @@ func (s *ServiceProvider) GetAuthClient(ctx context.Context) auth.Client {
 		}
 		closer.Add(con.Close)
 
-		s.authClient = auth.NewAuthClient(con)
+		s.authClient = auth.NewClient(con)
 	}
 
 	return s.authClient
@@ -94,9 +99,9 @@ func (s *ServiceProvider) GetRedisClient() redis.Client {
 	return s.redisClient
 }
 
-func (s *ServiceProvider) GetHandlerService(ctx context.Context) *handler.Service {
+func (s *ServiceProvider) GetHandlerService(ctx context.Context) *handler.Handler {
 	if s.handlerService == nil {
-		s.handlerService = handler.NewService(
+		s.handlerService = handler.NewHandler(
 			s.GetRedisClient(),
 			s.GetAuthClient(ctx),
 			s.GetChatClient(ctx),

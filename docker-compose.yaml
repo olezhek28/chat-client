@@ -1,0 +1,20 @@
+version: '3'
+
+volumes:
+  redisDB:
+  redisDB2:
+
+services:
+    redis:
+        image: redis:7.0-alpine
+        ports:
+        - "6378:6379"
+        volumes:
+        - redisDB:/data_cli
+
+    redis2:
+        image: redis:7.0-alpine
+        ports:
+        - "6377:6379"
+        volumes:
+        - redisDB2:/data_cli
