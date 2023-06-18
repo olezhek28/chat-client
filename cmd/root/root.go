@@ -3,6 +3,7 @@ package root
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/olezhek28/chat-client/internal/app"
 	"github.com/olezhek28/chat-client/internal/model"
@@ -13,6 +14,11 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "chat-client",
 	Short: "Клиент лучшего в мире чата",
+}
+
+var createCmd = &cobra.Command{
+	Use:   "create",
+	Short: "Что-то создает",
 }
 
 var loginCmd = &cobra.Command{
@@ -46,6 +52,57 @@ var loginCmd = &cobra.Command{
 	},
 }
 
+var createChatCmd = &cobra.Command{
+	Use:   "chat",
+	Short: "Создает новый чат",
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx := cmd.Context()
+
+		usernamesStr, err := cmd.Flags().GetString("usernames")
+		if err != nil {
+			log.Fatalf("failed to get usernames: %s\n", err.Error())
+		}
+
+		usernames := strings.Split(usernamesStr, ",")
+		if len(usernames) == 0 {
+			log.Fatalf("usernames must be not empty")
+		}
+
+		serviceProvider := app.NewServiceProvider()
+		handlerService := serviceProvider.GetHandlerService(ctx)
+
+		chatID, err := handlerService.CreateChat(ctx, usernames)
+		if err != nil {
+			log.Fatalf("failed to create chat: %s\n", err.Error())
+		}
+
+		log.Printf("chat created with id: %s\n", chatID)
+	},
+}
+
+var connectCmd = &cobra.Command{
+	Use:   "connect",
+	Short: "Подключается к чат-серверу",
+	Run: func(cmd *cobra.Command, args []string) {
+		ctx := cmd.Context()
+
+		chatID, err := cmd.Flags().GetString("chat-id")
+		if err != nil {
+			log.Fatalf("failed to get chat id: %s\n", err.Error())
+		}
+
+		serviceProvider := app.NewServiceProvider()
+		handlerService := serviceProvider.GetHandlerService(ctx)
+
+		err = handlerService.ConnectChat(ctx, chatID)
+		if err != nil {
+			log.Fatalf("failed to connect: %s\n", err.Error())
+		}
+
+		log.Println("chat finished")
+	},
+}
+
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the rootCmd.
 func Execute() {
@@ -57,6 +114,9 @@ func Execute() {
 
 func init() {
 	rootCmd.AddCommand(loginCmd)
+	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(connectCmd)
+	createCmd.AddCommand(createChatCmd)
 
 	loginCmd.Flags().StringP("username", "u", "", "Имя пользователя")
 	err := loginCmd.MarkFlagRequired("username")
@@ -68,5 +128,17 @@ func init() {
 	err = loginCmd.MarkFlagRequired("password")
 	if err != nil {
 		log.Fatalf("failed to mark password flag as required: %s\n", err.Error())
+	}
+
+	connectCmd.Flags().StringP("chat-id", "c", "", "Chat id")
+	err = connectCmd.MarkFlagRequired("chat-id")
+	if err != nil {
+		log.Fatalf("failed to mark chat-id flag required: %s", err.Error())
+	}
+
+	createChatCmd.Flags().StringP("usernames", "u", "", "List of usernames for chat")
+	err = createChatCmd.MarkFlagRequired("usernames")
+	if err != nil {
+		log.Fatalf("failed to mark usernames flag required: %s", err.Error())
 	}
 }

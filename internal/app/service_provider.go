@@ -80,7 +80,7 @@ func (s *ServiceProvider) GetChatClient(ctx context.Context) chatServer.Client {
 
 func (s *ServiceProvider) GetRedisClient() redis.Client {
 	if s.redisClient == nil {
-		client := redis.NewClient("localhost:6377")
+		client := redis.NewClient("localhost:6378")
 		closer.Add(func() error {
 			if client != nil {
 				return client.Close()
